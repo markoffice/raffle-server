@@ -1,0 +1,11 @@
+{
+  "name": "raffle-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "מערכת הגרלה לעמותה — ניהול הפניות, API לדף נחיתה, קו טלפוני וסליקה",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": { "node": ">=22.13" },
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "express": "^4.21.2" }
+}

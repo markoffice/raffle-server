@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ניהול הפניות — הגרלת רכב</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{
+  --navy:#0f2a44; --navy-2:#163a5c; --teal:#0fa3a3; --teal-2:#0c8585; --teal-soft:#e3f6f6;
+  --bg:#f3f6f9; --card:#fff; --text:#1d2b3a; --muted:#6b7b8c; --line:#e3e9ef;
+  --gold:#d9a521; --red:#d64545; --green:#1f9d61;
+  --radius:14px; --shadow:0 2px 10px rgba(15,42,68,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+button,input,select{font-family:inherit;font-size:inherit}
+a{color:var(--teal-2)}
+
+/* header */
+header{background:linear-gradient(135deg,var(--navy),var(--navy-2));color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px}
+.brand .logo{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:22px}
+.brand h1{font-size:20px;font-weight:700}
+.brand small{display:block;font-size:13px;opacity:.75;font-weight:400}
+.mode-badge{font-size:12px;padding:5px 12px;border-radius:20px;background:rgba(255,255,255,.14)}
+.mode-badge.live{background:var(--teal)}
+
+nav{background:#fff;border-bottom:1px solid var(--line);padding:0 28px;display:flex;gap:4px;position:sticky;top:0;z-index:5}
+nav button{background:none;border:none;padding:15px 18px;cursor:pointer;color:var(--muted);font-weight:500;border-bottom:3px solid transparent;display:flex;align-items:center;gap:8px}
+nav button.active{color:var(--navy);border-bottom-color:var(--teal)}
+nav button:hover{color:var(--navy)}
+
+main{padding:24px 28px;max-width:1300px;margin:0 auto}
+.view{display:none}.view.active{display:block}
+
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:22px}
+.kpi{background:var(--card);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:center}
+.kpi .ic{width:48px;height:48px;border-radius:12px;background:var(--teal-soft);color:var(--teal-2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.kpi .val{font-size:26px;font-weight:800;color:var(--navy);line-height:1.1}
+.kpi .lbl{font-size:13px;color:var(--muted)}
+
+.grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:18px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:18px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.card-h h2{font-size:17px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:9px}
+.card-h h2 i{color:var(--teal)}
+
+/* chart */
+.chart{display:flex;align-items:flex-end;gap:6px;height:190px;padding-top:10px}
+.chart .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px}
+.chart .bar{width:100%;max-width:34px;background:linear-gradient(180deg,var(--teal),var(--teal-2));border-radius:6px 6px 2px 2px;min-height:2px;position:relative}
+.chart .bar span{position:absolute;top:-19px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted);font-weight:500}
+.chart .d{font-size:11px;color:var(--muted)}
+
+/* leaderboard */
+.lb-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.lb-row:last-child{border-bottom:none}
+.lb-row:hover .lb-name{color:var(--teal-2)}
+.rank{width:30px;height:30px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--muted);flex-shrink:0}
+.rank.r1{background:#fbefc9;color:#a77a06}.rank.r2{background:#e9edf1;color:#5b6876}.rank.r3{background:#f5dfcf;color:#9a5a2c}
+.lb-main{flex:1;min-width:0}
+.lb-name{font-weight:600}
+.prog{height:7px;background:var(--bg);border-radius:6px;overflow:hidden;margin-top:6px}
+.prog > div{height:100%;background:var(--teal);border-radius:6px}
+.prog.done > div{background:var(--green)}
+.lb-num{text-align:left;font-weight:700;color:var(--navy);white-space:nowrap}
+.lb-num small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+
+/* toolbar & buttons */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{border:none;border-radius:10px;padding:9px 16px;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:7px;transition:.15s}
+.btn-primary{background:var(--teal);color:#fff}.btn-primary:hover{background:var(--teal-2)}
+.btn-ghost{background:var(--bg);color:var(--navy)}.btn-ghost:hover{background:#e6ecf2}
+.btn-danger{background:#fdeaea;color:var(--red)}.btn-danger:hover{background:#f9d6d6}
+.btn-sm{padding:6px 10px;font-size:13px;border-radius:8px}
+.btn-icon{width:34px;height:34px;padding:0;justify-content:center;border-radius:8px}
+.input,.select{border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#fff;outline:none;min-width:0}
+.input:focus,.select:focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-soft)}
+.search{position:relative}
+.search i{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search .input{padding-right:34px;width:240px}
+
+/* table */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:right;font-weight:600;font-size:13px;color:var(--muted);padding:10px 12px;border-bottom:2px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+th.nosort{cursor:default}
+th i{font-size:11px;margin-right:4px;opacity:.5}
+td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:hover td{background:#fafcfd}
+.code{font-family:Consolas,monospace;background:var(--bg);padding:3px 8px;border-radius:6px;font-size:13px;direction:ltr;display:inline-block}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500}
+.tag-on{background:#e2f5ea;color:var(--green)}.tag-off{background:#eef1f4;color:var(--muted)}
+.tag-web{background:var(--teal-soft);color:var(--teal-2)}.tag-phone{background:#e8eefb;color:#3758a8}
+.tag-none{background:#f4f1e6;color:#8a6d1a}
+.actions{display:flex;gap:6px;justify-content:flex-end}
+.empty{text-align:center;color:var(--muted);padding:40px 10px}
+.empty i{font-size:34px;display:block;margin-bottom:10px;opacity:.4}
+.mini-prog{display:flex;align-items:center;gap:8px;min-width:130px}
+.mini-prog .prog{flex:1;margin:0}
+.mini-prog span{font-size:12px;color:var(--muted);width:36px}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(15,42,68,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.2)}
+.modal.wide{max-width:820px}
+.modal-h{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.modal-h h3{font-size:18px;color:var(--navy)}
+.modal-b{padding:22px}
+.modal-f{padding:14px 22px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-start}
+.field{margin-bottom:15px}
+.field label{display:block;font-size:13px;font-weight:500;margin-bottom:6px;color:var(--navy)}
+.field .input{width:100%}
+.field .hint{font-size:12px;color:var(--muted);margin-top:5px}
+.field .err{font-size:12px;color:var(--red);margin-top:5px;display:none}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.linkbox{display:flex;gap:8px;align-items:center;background:var(--bg);border-radius:10px;padding:8px 10px}
+.linkbox input{flex:1;border:none;background:none;direction:ltr;text-align:left;font-family:Consolas,monospace;font-size:13px;outline:none;min-width:0}
+.det-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+.det-kpis div{background:var(--bg);border-radius:10px;padding:12px;text-align:center}
+.det-kpis b{display:block;font-size:22px;color:var(--navy)}
+.det-kpis small{color:var(--muted);font-size:12px}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--navy);color:#fff;padding:11px 20px;border-radius:10px;opacity:0;transition:.25s;z-index:99;display:flex;gap:8px;align-items:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo"><i class="fa-solid fa-car-side"></i></div>
+    <div>
+      <h1 id="orgName">הגרלת רכב — ניהול הפניות</h1>
+      <small id="orgSub">כרטיס: 150 ₪ · מעקב שגרירים וקישורים אישיים</small>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <span class="mode-badge" id="modeBadge"><i class="fa-solid fa-flask"></i> מצב הדגמה</span>
+    <button class="btn btn-sm" id="logoutBtn" style="display:none;background:rgba(255,255,255,.14);color:#fff" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> יציאה</button>
+  </div>
+</header>
+
+<nav>
+  <button class="active" data-view="overview"><i class="fa-solid fa-chart-pie"></i> סקירה</button>
+  <button data-view="ambassadors"><i class="fa-solid fa-user-group"></i> שגרירים</button>
+  <button data-view="sales"><i class="fa-solid fa-ticket"></i> מכירות</button>
+</nav>
+
+<main>
+  <!-- OVERVIEW -->
+  <section class="view active" id="view-overview">
+    <div class="kpis" id="kpis"></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-h"><h2><i class="fa-solid fa-chart-column"></i> כרטיסים לפי יום (14 ימים אחרונים)</h2></div>
+        <div class="chart" id="chart"></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2><i class="fa-solid fa-trophy"></i> טבלת מובילים</h2>
+          <button class="btn btn-ghost btn-sm" onclick="go('ambassadors')">לכל השגרירים <i class="fa-solid fa-arrow-left"></i></button></div>
+        <div id="leaderboard"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AMBASSADORS -->
+  <section class="view" id="view-ambassadors">
+    <div class="card">
+      <div class="card-h">
+        <h2><i class="fa-solid fa-user-group"></i> שגרירים <span id="ambCount" style="color:var(--muted);font-weight:400;font-size:14px"></span></h2>
+        <div class="toolbar">
+          <div class="search"><i class="fa-solid fa-magnifying-glass"></i><input class="input" id="ambSearch" placeholder="חיפוש שם / טלפון / קוד"></div>
+          <select class="select" id="ambFilter"><option value="all">כולם</option><option value="on">פעילים</option><option value="off">לא פעילים</option></select>
+          <button class="btn btn-ghost" onclick="exportAmb()"><i class="fa-solid fa-file-export"></i> ייצוא</button>
+          <button class="btn btn-primary" onclick="openAmbForm()"><i class="fa-solid fa-plus"></i> שגריר חדש</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th data-sort="name"><i class="fa-solid fa-sort"></i>שם</th>
+            <th data-sort="phone"><i class="fa-solid fa-sort"></i>טלפון</th>
+            <th data-sort="code"><i class="fa-solid fa-sort"></i>קוד</th>
+            <th data-sort="tickets"><i class="fa-solid fa-sort"></i>כרטיסים</th>
+            <th data-sort="amount"><i class="fa-solid fa-sort"></i>סכום</th>
+            <th data-sort="visits" title="כניסות לקישור האישי"><i class="fa-solid fa-sort"></i>כניסות</th>
+            <th data-sort="conv" title="אחוז הכניסות שהפכו לרכישה"><i class="fa-solid fa-sort"></i>המרה</th>
+            <th data-sort="pct"><i class="fa-solid fa-sort"></i>יעד</th>
+            <th data-sort="active"><i class="fa-solid fa-sort"></i>סטטוס</th>
+            <th class="nosort"></th>
+          </tr></thead>
+          <tbody id="ambBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- SALES -->
+  <section class="view" id="view-sales">
+    <div class="card">
+      <div class="card-h">
+        <h2><i class="fa-solid fa-ticket"></i> מכירות <span id="salesCount" style="color:var(--muted);font-weight:400;font-size:14px"></span></h2>
+        <div class="toolbar">
+          <div class="search"><i class="fa-solid fa-magnifying-glass"></i><input class="input" id="saleSearch" placeholder="חיפוש קונה / טלפון / כרטיס"></div>
+          <select class="select" id="saleAmb"></select>
+          <select class="select" id="saleChannel"><option value="all">כל הערוצים</option><option value="web">אתר</option><option value="phone">טלפון</option></select>
+          <button class="btn btn-ghost" onclick="exportSales()"><i class="fa-solid fa-file-export"></i> ייצוא</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th class="nosort">מס' כרטיס</th><th class="nosort">תאריך</th><th class="nosort">קונה</th><th class="nosort">טלפון</th>
+            <th class="nosort">סכום</th><th class="nosort">ערוץ</th><th class="nosort">שגריר</th>
+          </tr></thead>
+          <tbody id="salesBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>נבנה ע"י מרק אוטומציות עסקיות חכמות</footer>
+
+<!-- Ambassador form modal -->
+<div class="overlay" id="ambModal">
+  <div class="modal">
+    <div class="modal-h"><h3 id="ambModalTitle">שגריר חדש</h3><button class="btn btn-ghost btn-icon" onclick="closeModal('ambModal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-b">
+      <input type="hidden" id="fId">
+      <div class="field"><label>שם מלא *</label><input class="input" id="fName"><div class="err" id="eName">יש להזין שם</div></div>
+      <div class="row2">
+        <div class="field"><label>טלפון *</label><input class="input" id="fPhone" inputmode="tel" style="direction:ltr;text-align:right"><div class="err" id="ePhone">מספר טלפון לא תקין</div></div>
+        <div class="field"><label>יעד כרטיסים</label><input class="input" id="fTarget" type="number" min="0" value="20"></div>
+      </div>
+      <div class="field">
+        <label>קוד אישי *</label>
+        <div style="display:flex;gap:8px"><input class="input" id="fCode" style="direction:ltr;flex:1"><button class="btn btn-ghost" type="button" onclick="$('#fCode').value=genCode()" title="קוד חדש"><i class="fa-solid fa-rotate"></i></button></div>
+        <div class="hint">אותיות באנגלית וספרות בלבד. הקוד מופיע בקישור וגם מוקש בקו הטלפוני (לכן מומלץ קוד מספרי).</div>
+        <div class="err" id="eCode">קוד לא תקין או קיים כבר</div>
+      </div>
+      <div class="field"><label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="fActive" checked> שגריר פעיל</label></div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-primary" onclick="saveAmb()"><i class="fa-solid fa-check"></i> שמירה</button>
+      <button class="btn btn-ghost" onclick="closeModal('ambModal')">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ambassador detail modal -->
+<div class="overlay" id="detModal">
+  <div class="modal wide">
+    <div class="modal-h"><h3 id="detTitle"></h3><button class="btn btn-ghost btn-icon" onclick="closeModal('detModal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-b" id="detBody"></div>
+  </div>
+</div>
+
+<!-- Login -->
+<div class="overlay" id="loginModal" style="background:linear-gradient(135deg,var(--navy),var(--navy-2))">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-b" style="text-align:center;padding:32px 28px">
+      <div style="width:60px;height:60px;border-radius:16px;background:var(--teal-soft);color:var(--teal-2);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px"><i class="fa-solid fa-lock"></i></div>
+      <h3 style="color:var(--navy);margin-bottom:6px">כניסה לניהול</h3>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:20px">הגרלת רכב — ניהול הפניות</p>
+      <input class="input" id="lPass" type="password" placeholder="סיסמה" style="width:100%;margin-bottom:12px;text-align:center">
+      <button class="btn btn-primary" id="lBtn" style="width:100%;justify-content:center" onclick="doLogin()"><i class="fa-solid fa-right-to-bracket"></i> כניסה</button>
+      <div id="loginErr" style="color:var(--red);font-size:13px;margin-top:10px;min-height:18px"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= CONFIG ================= */
+const CONFIG = {
+  ORG_NAME: 'הגרלת רכב — ניהול הפניות',
+  TICKET_PRICE: 150,
+  LANDING_URL: 'https://raffle.example.org/',   // כתובת דף הנחיתה — להחליף
+  // כשהקובץ מוגש מהשרת — מחובר ל-API. כשפותחים אותו מקומית — מצב הדגמה
+  API_BASE: location.protocol.startsWith('http') ? '/api' : '',
+  STORAGE_KEY: 'raffle_referrals_v1'
+};
+
+/* ================= HELPERS ================= */
+const $ = s => document.querySelector(s);
+const fmt = n => Number(n||0).toLocaleString('he-IL');
+const money = n => '₪' + fmt(n);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const normPhone = p => String(p||'').replace(/\D/g,'');
+const fmtDate = d => { const x = new Date(d); return x.toLocaleDateString('he-IL') + ' ' + x.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}); };
+const linkFor = code => CONFIG.LANDING_URL + (CONFIG.LANDING_URL.includes('?') ? '&' : '?') + 'ref=' + encodeURIComponent(code);
+function toast(msg, icon='fa-circle-check'){ const t=$('#toast'); t.innerHTML=`<i class="fa-solid ${icon}"></i> ${esc(msg)}`; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2200); }
+async function copy(text){ try{ await navigator.clipboard.writeText(text); toast('הקישור הועתק'); }catch(e){ const i=document.createElement('input'); i.value=text; document.body.appendChild(i); i.select(); document.execCommand('copy'); i.remove(); toast('הקישור הועתק'); } }
+
+/* ================= DATA LAYER =================
+   מצב הדגמה: נשמר בדפדפן.
+   מצב חי (מוגש מהשרת) — endpoints:
+     GET  {API_BASE}/ambassadors          -> [{id,name,phone,code,target,active,created,visits}]
+     POST {API_BASE}/ambassadors/save     -> body: ambassador, returns saved ambassador
+     POST {API_BASE}/ambassadors/delete   -> body: {id}
+     GET  {API_BASE}/sales                -> [{id,ticket_no,buyer_name,buyer_phone,amount,ref,channel,date}]
+*/
+const Store = {
+  live: () => !!CONFIG.API_BASE,
+  async _req(path, opts){
+    const r = await fetch(CONFIG.API_BASE + path, {credentials:'same-origin', ...opts});
+    let j = null; try{ j = await r.json(); }catch(e){}
+    if(r.status===401 && path!=='/login'){ showLogin(); throw new Error('נדרשת התחברות'); }
+    if(!r.ok) throw new Error(j?.error || ('שגיאה '+r.status));
+    return j;
+  },
+  _get(path){ return this._req(path); },
+  _post(path, body){ return this._req(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); },
+  _local(){ try{ return JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEY)) }catch(e){ return null } },
+  _saveLocal(d){ try{ localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(d)) }catch(e){} },
+  _mem: null,
+  _db(){ if(!this._mem){ this._mem = this._local() || seedDemo(); this._saveLocal(this._mem); } return this._mem; },
+  async load(){
+    if(this.live()) { const [a,s] = await Promise.all([this._get('/ambassadors'), this._get('/sales')]); return {ambassadors:a, sales:s}; }
+    return JSON.parse(JSON.stringify(this._db()));
+  },
+  async saveAmbassador(a){
+    if(this.live()) return this._post('/ambassadors/save', a);
+    const db = this._db(); const i = db.ambassadors.findIndex(x=>x.id===a.id);
+    if(i>=0) db.ambassadors[i] = a; else db.ambassadors.push(a);
+    this._saveLocal(db); return a;
+  },
+  async deleteAmbassador(id){
+    if(this.live()) return this._post('/ambassadors/delete', {id});
+    const db = this._db(); db.ambassadors = db.ambassadors.filter(x=>x.id!==id); this._saveLocal(db);
+  }
+};
+
+function seedDemo(){
+  const names = [['משה כהן','0527100100'],['יוסי לוי','0533200200'],['אברהם פרידמן','0548300300'],['דוד גולדברג','0504400400'],['שמואל רוזן','0556500500'],['יעקב ברגר','0527600600'],['חיים שפירא','0533700700']];
+  const ambassadors = names.map((n,i)=>({ id:uid()+i, name:n[0], phone:n[1], code:String(1001+i), target:[30,20,25,15,20,10,20][i], visits:[64,41,37,22,30,9,2][i], active:i!==6, created:new Date(Date.now()-20*864e5).toISOString() }));
+  const buyers = ['ישראל','מנחם','נחום','אהרן','שלמה','מרדכי','בנימין','אליהו','צבי','מאיר','יהודה','נתן'];
+  const lasts = ['כץ','וייס','שטרן','קליין','הורוביץ','לנדאו','פישר','גרין','ברוך','אדלר'];
+  const weights = [9,6,5,3,4,1,0];
+  const sales = []; let t = 100001;
+  for(let k=0;k<95;k++){
+    const r = Math.random()*38; let acc=0, ref='';
+    for(let i=0;i<weights.length;i++){ acc+=weights[i]; if(r<acc){ ref=ambassadors[i].code; break; } }
+    const daysAgo = Math.floor(Math.pow(Math.random(),1.4)*14);
+    const d = new Date(Date.now() - daysAgo*864e5 - Math.random()*864e5*0.9);
+    sales.push({ id:uid()+k, ticket_no:t++, buyer_name: buyers[k%buyers.length]+' '+lasts[(k*7)%lasts.length],
+      buyer_phone:'05'+(2+k%4)+String(1000000+Math.floor(Math.random()*8999999)).slice(0,7),
+      amount:CONFIG.TICKET_PRICE, ref, channel: Math.random()<.72?'web':'phone', date:d.toISOString() });
+  }
+  sales.sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach((s,i)=>s.ticket_no=100001+i);
+  return {ambassadors, sales};
+}
+
+/* ================= STATE ================= */
+let DATA = {ambassadors:[], sales:[]};
+let ambSort = {key:'tickets', dir:-1};
+
+function stats(){
+  const by = {};
+  DATA.ambassadors.forEach(a=> by[a.code] = {tickets:0, amount:0});
+  DATA.sales.forEach(s=>{ if(s.ref && by[s.ref]){ by[s.ref].tickets++; by[s.ref].amount += Number(s.amount)||0; } });
+  return by;
+}
+function ambRows(){
+  const st = stats();
+  return DATA.ambassadors.map(a=>{ const s = st[a.code]||{tickets:0,amount:0}; const visits = Number(a.visits)||0; const webT = DATA.sales.filter(x=>x.ref===a.code && x.channel==='web').length; return {...a, visits, tickets:s.tickets, amount:s.amount, pct: a.target? Math.round(s.tickets/a.target*100):0, conv: visits? Math.round(webT/visits*100):0}; });
+}
+const ambByCode = code => DATA.ambassadors.find(a=>a.code===code);
+
+/* ================= RENDER ================= */
+function renderOverview(){
+  const total = DATA.sales.length;
+  const raised = DATA.sales.reduce((s,x)=>s+(Number(x.amount)||0),0);
+  const viaRef = DATA.sales.filter(s=>s.ref && ambByCode(s.ref)).length;
+  const activeAmb = DATA.ambassadors.filter(a=>a.active).length;
+  const today = new Date().toDateString();
+  const todayCnt = DATA.sales.filter(s=>new Date(s.date).toDateString()===today).length;
+  $('#kpis').innerHTML = [
+    ['fa-ticket','כרטיסים שנמכרו',fmt(total)],
+    ['fa-shekel-sign','סה"כ גויס',money(raised)],
+    ['fa-link','דרך שגרירים', total? Math.round(viaRef/total*100)+'%':'0%'],
+    ['fa-user-check','שגרירים פעילים',fmt(activeAmb)],
+    ['fa-calendar-day','כרטיסים היום',fmt(todayCnt)]
+  ].map(k=>`<div class="kpi"><div class="ic"><i class="fa-solid ${k[0]}"></i></div><div><div class="val">${k[2]}</div><div class="lbl">${k[1]}</div></div></div>`).join('');
+
+  // chart
+  const days = [];
+  for(let i=13;i>=0;i--){ const d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-i); days.push({d, n:0}); }
+  DATA.sales.forEach(s=>{ const sd=new Date(s.date); sd.setHours(0,0,0,0); const f=days.find(x=>x.d.getTime()===sd.getTime()); if(f) f.n++; });
+  const max = Math.max(1,...days.map(x=>x.n));
+  $('#chart').innerHTML = days.map(x=>`<div class="col"><div class="bar" style="height:${x.n/max*85}%"><span>${x.n||''}</span></div><div class="d">${x.d.getDate()}/${x.d.getMonth()+1}</div></div>`).join('');
+
+  // leaderboard
+  const rows = ambRows().sort((a,b)=>b.tickets-a.tickets).slice(0,7);
+  $('#leaderboard').innerHTML = rows.length ? rows.map((r,i)=>`
+    <div class="lb-row" onclick="openDetail('${r.id}')">
+      <div class="rank ${i<3?'r'+(i+1):''}">${i+1}</div>
+      <div class="lb-main"><div class="lb-name">${esc(r.name)}</div>
+        <div class="prog ${r.pct>=100?'done':''}"><div style="width:${Math.min(100,r.pct)}%"></div></div></div>
+      <div class="lb-num">${fmt(r.tickets)} <small>${r.target? 'מתוך '+fmt(r.target):'ללא יעד'}</small></div>
+    </div>`).join('') : `<div class="empty"><i class="fa-solid fa-user-plus"></i>עדיין אין שגרירים</div>`;
+}
+
+function renderAmb(){
+  const q = $('#ambSearch').value.trim().toLowerCase();
+  const f = $('#ambFilter').value;
+  let rows = ambRows().filter(r=>{
+    if(f==='on' && !r.active) return false; if(f==='off' && r.active) return false;
+    if(!q) return true;
+    return r.name.toLowerCase().includes(q) || normPhone(r.phone).includes(normPhone(q)||'@@') || String(r.code).toLowerCase().includes(q);
+  });
+  const k = ambSort.key, d = ambSort.dir;
+  rows.sort((a,b)=>{ const x=a[k], y=b[k]; return (typeof x==='string'? x.localeCompare(y,'he') : (x>y?1:x<y?-1:0)) * d; });
+  $('#ambCount').textContent = `(${rows.length})`;
+  $('#ambBody').innerHTML = rows.length ? rows.map(r=>`
+    <tr>
+      <td><a href="#" onclick="openDetail('${r.id}');return false" style="font-weight:600;text-decoration:none">${esc(r.name)}</a></td>
+      <td style="direction:ltr;text-align:right">${esc(r.phone)}</td>
+      <td><span class="code">${esc(r.code)}</span></td>
+      <td><b>${fmt(r.tickets)}</b></td>
+      <td>${money(r.amount)}</td>
+      <td>${fmt(r.visits)}</td>
+      <td>${r.visits? r.conv+'%' : '<span style="color:var(--muted)">—</span>'}</td>
+      <td>${r.target? `<div class="mini-prog"><div class="prog ${r.pct>=100?'done':''}"><div style="width:${Math.min(100,r.pct)}%"></div></div><span>${r.pct}%</span></div>` : '<span style="color:var(--muted)">—</span>'}</td>
+      <td>${r.active? '<span class="tag tag-on"><i class="fa-solid fa-circle" style="font-size:7px"></i> פעיל</span>' : '<span class="tag tag-off">לא פעיל</span>'}</td>
+      <td><div class="actions">
+        <button class="btn btn-ghost btn-icon" title="העתקת קישור" onclick="copy('${esc(linkFor(r.code))}')"><i class="fa-solid fa-link"></i></button>
+        <button class="btn btn-ghost btn-icon" title="שליחה בוואטסאפ" onclick="sendWa('${r.id}')"><i class="fa-brands fa-whatsapp"></i></button>
+        <button class="btn btn-ghost btn-icon" title="עריכה" onclick="openAmbForm('${r.id}')"><i class="fa-solid fa-pen"></i></button>
+      </div></td>
+    </tr>`).join('') : `<tr><td colspan="10"><div class="empty"><i class="fa-solid fa-user-group"></i>לא נמצאו שגרירים</div></td></tr>`;
+  document.querySelectorAll('#view-ambassadors th[data-sort]').forEach(th=>{
+    const i = th.querySelector('i'); const on = th.dataset.sort===ambSort.key;
+    i.className = 'fa-solid ' + (on ? (ambSort.dir>0?'fa-sort-up':'fa-sort-down') : 'fa-sort');
+    i.style.opacity = on ? 1 : .5;
+  });
+}
+
+function renderSalesFilter(){
+  const cur = $('#saleAmb').value || 'all';
+  $('#saleAmb').innerHTML = `<option value="all">כל השגרירים</option><option value="none">ללא הפניה</option>` +
+    DATA.ambassadors.slice().sort((a,b)=>a.name.localeCompare(b.name,'he')).map(a=>`<option value="${esc(a.code)}">${esc(a.name)}</option>`).join('');
+  $('#saleAmb').value = [...$('#saleAmb').options].some(o=>o.value===cur) ? cur : 'all';
+}
+function filteredSales(){
+  const q = $('#saleSearch').value.trim().toLowerCase();
+  const a = $('#saleAmb').value, c = $('#saleChannel').value;
+  return DATA.sales.filter(s=>{
+    const known = s.ref && ambByCode(s.ref);
+    if(a==='none' && known) return false;
+    if(a!=='all' && a!=='none' && s.ref!==a) return false;
+    if(c!=='all' && s.channel!==c) return false;
+    if(!q) return true;
+    return String(s.buyer_name).toLowerCase().includes(q) || String(s.ticket_no).includes(q) || (normPhone(q) && normPhone(s.buyer_phone).includes(normPhone(q)));
+  }).sort((x,y)=>new Date(y.date)-new Date(x.date));
+}
+function saleRow(s, showAmb=true){
+  const amb = s.ref && ambByCode(s.ref);
+  return `<tr>
+    <td><span class="code">${esc(s.ticket_no)}</span></td>
+    <td style="white-space:nowrap">${fmtDate(s.date)}</td>
+    <td>${esc(s.buyer_name)}</td>
+    <td style="direction:ltr;text-align:right">${esc(s.buyer_phone)}</td>
+    <td>${money(s.amount)}</td>
+    <td>${s.channel==='phone'? '<span class="tag tag-phone"><i class="fa-solid fa-phone"></i> טלפון</span>' : '<span class="tag tag-web"><i class="fa-solid fa-globe"></i> אתר</span>'}</td>
+    ${showAmb? `<td>${amb? esc(amb.name) : (s.ref? `<span class="tag tag-none">קוד לא מוכר: ${esc(s.ref)}</span>` : '<span class="tag tag-none">ללא הפניה</span>')}</td>`:''}
+  </tr>`;
+}
+function renderSales(){
+  const rows = filteredSales();
+  $('#salesCount').textContent = `(${rows.length} · ${money(rows.reduce((t,s)=>t+(Number(s.amount)||0),0))})`;
+  $('#salesBody').innerHTML = rows.length ? rows.map(s=>saleRow(s)).join('') : `<tr><td colspan="7"><div class="empty"><i class="fa-solid fa-ticket"></i>אין מכירות להצגה</div></td></tr>`;
+}
+
+function renderAll(){ renderOverview(); renderAmb(); renderSalesFilter(); renderSales(); }
+
+/* ================= ACTIONS ================= */
+function go(v){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active', b.dataset.view===v));
+  document.querySelectorAll('.view').forEach(s=>s.classList.toggle('active', s.id==='view-'+v));
+}
+function openModal(id){ $('#'+id).classList.add('open'); }
+function closeModal(id){ $('#'+id).classList.remove('open'); }
+
+function genCode(){
+  const used = new Set(DATA.ambassadors.map(a=>String(a.code)));
+  let c; do { c = String(1000 + Math.floor(Math.random()*9000)); } while(used.has(c));
+  return c;
+}
+function openAmbForm(id){
+  const a = id ? DATA.ambassadors.find(x=>x.id===id) : null;
+  $('#ambModalTitle').textContent = a ? 'עריכת שגריר' : 'שגריר חדש';
+  $('#fId').value = a?.id || '';
+  $('#fName').value = a?.name || '';
+  $('#fPhone').value = a?.phone || '';
+  $('#fTarget').value = a ? (a.target||0) : 20;
+  $('#fCode').value = a?.code || genCode();
+  $('#fActive').checked = a ? !!a.active : true;
+  document.querySelectorAll('#ambModal .err').forEach(e=>e.style.display='none');
+  closeModal('detModal'); openModal('ambModal');
+  setTimeout(()=>$('#fName').focus(),50);
+}
+async function saveAmb(){
+  const id = $('#fId').value;
+  const name = $('#fName').value.trim();
+  const phone = normPhone($('#fPhone').value);
+  const code = $('#fCode').value.trim();
+  let ok = true;
+  const show = (e,b)=>{ $(e).style.display = b?'block':'none'; if(b) ok=false; };
+  show('#eName', !name);
+  show('#ePhone', !/^0\d{8,9}$/.test(phone));
+  show('#eCode', !/^[A-Za-z0-9]{2,20}$/.test(code) || DATA.ambassadors.some(a=>String(a.code).toLowerCase()===code.toLowerCase() && a.id!==id));
+  if(!ok) return;
+  const prev = id ? DATA.ambassadors.find(x=>x.id===id) : null;
+  if(prev && prev.code!==code && DATA.sales.some(s=>s.ref===prev.code)){
+    if(!confirmInline('לשגריר יש מכירות על הקוד הקודם. שינוי הקוד ינתק אותן ממנו. להמשיך?')) return;
+  }
+  const a = { id: id || uid(), name, phone, code, target: Math.max(0, parseInt($('#fTarget').value)||0), active: $('#fActive').checked, created: prev?.created || new Date().toISOString() };
+  try{ await Store.saveAmbassador(a); await reload(); closeModal('ambModal'); toast(id?'השגריר עודכן':'השגריר נוסף'); }
+  catch(e){ toast(e.message||'שגיאה בשמירה','fa-triangle-exclamation'); }
+}
+// confirm() is avoided in some embedded contexts; fall back gracefully
+function confirmInline(msg){ try{ return window.confirm(msg); }catch(e){ return true; } }
+
+async function delAmb(id){
+  const a = DATA.ambassadors.find(x=>x.id===id); if(!a) return;
+  const has = DATA.sales.some(s=>s.ref===a.code);
+  if(has){ toast('לא ניתן למחוק שגריר עם מכירות — אפשר לסמן כלא פעיל','fa-circle-info'); return; }
+  if(!confirmInline(`למחוק את ${a.name}?`)) return;
+  try{ await Store.deleteAmbassador(id); await reload(); closeModal('detModal'); toast('השגריר נמחק'); }
+  catch(e){ toast(e.message||'שגיאה במחיקה','fa-triangle-exclamation'); }
+}
+
+function waText(a){ return `שלום ${a.name},\nזה הקישור האישי שלך למכירת כרטיסים להגרלת הרכב:\n${linkFor(a.code)}\n\nמי שקונה בטלפון — יקיש את הקוד שלך: ${a.code}`; }
+function sendWa(id){
+  const a = DATA.ambassadors.find(x=>x.id===id); if(!a) return;
+  let p = normPhone(a.phone); if(p.startsWith('0')) p = '972'+p.slice(1);
+  window.open(`https://wa.me/${p}?text=${encodeURIComponent(waText(a))}`, '_blank');
+}
+
+function openDetail(id){
+  const r = ambRows().find(x=>x.id===id); if(!r) return;
+  const sales = DATA.sales.filter(s=>s.ref===r.code).sort((x,y)=>new Date(y.date)-new Date(x.date));
+  const phoneCnt = sales.filter(s=>s.channel==='phone').length;
+  $('#detTitle').innerHTML = `${esc(r.name)} <span class="code" style="margin-right:8px">${esc(r.code)}</span>`;
+  $('#detBody').innerHTML = `
+    <div class="linkbox"><i class="fa-solid fa-link" style="color:var(--teal)"></i><input readonly value="${esc(linkFor(r.code))}" onclick="this.select()">
+      <button class="btn btn-primary btn-sm" onclick="copy('${esc(linkFor(r.code))}')"><i class="fa-regular fa-copy"></i> העתקה</button>
+      <button class="btn btn-ghost btn-sm" onclick="sendWa('${r.id}')"><i class="fa-brands fa-whatsapp"></i> וואטסאפ</button></div>
+    <div class="det-kpis">
+      <div><b>${fmt(r.tickets)}</b><small>כרטיסים${r.target?` מתוך ${fmt(r.target)}`:''}</small></div>
+      <div><b>${money(r.amount)}</b><small>סכום שגויס</small></div>
+      <div><b>${fmt(sales.length-phoneCnt)} / ${fmt(phoneCnt)}</b><small>אתר / טלפון</small></div>
+      <div><b>${fmt(r.visits)}</b><small>כניסות לקישור${r.visits?` · המרה ${r.conv}%`:''}</small></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="btn btn-ghost btn-sm" onclick="openAmbForm('${r.id}')"><i class="fa-solid fa-pen"></i> עריכה</button>
+      <button class="btn btn-danger btn-sm" onclick="delAmb('${r.id}')"><i class="fa-solid fa-trash"></i> מחיקה</button>
+      <span style="flex:1"></span>
+      <span style="color:var(--muted);font-size:13px;align-self:center">טלפון: <span style="direction:ltr;display:inline-block">${esc(r.phone)}</span></span>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr><th class="nosort">מס' כרטיס</th><th class="nosort">תאריך</th><th class="nosort">קונה</th><th class="nosort">טלפון</th><th class="nosort">סכום</th><th class="nosort">ערוץ</th></tr></thead>
+    <tbody>${sales.length? sales.map(s=>saleRow(s,false)).join('') : `<tr><td colspan="6"><div class="empty"><i class="fa-solid fa-ticket"></i>עדיין אין מכירות דרך השגריר</div></td></tr>`}</tbody></table></div>`;
+  openModal('detModal');
+}
+
+function downloadCsv(name, rows){
+  const csv = '﻿' + rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download = name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function exportAmb(){
+  const rows = ambRows().sort((a,b)=>b.tickets-a.tickets);
+  downloadCsv('שגרירים.csv', [['שם','טלפון','קוד','קישור','כרטיסים','סכום','כניסות','המרה','יעד','% מהיעד','סטטוס'],
+    ...rows.map(r=>[r.name,r.phone,r.code,linkFor(r.code),r.tickets,r.amount,r.visits,r.conv+'%',r.target,r.pct+'%',r.active?'פעיל':'לא פעיל'])]);
+}
+function exportSales(){
+  const rows = filteredSales();
+  downloadCsv('מכירות.csv', [['מס כרטיס','תאריך','קונה','טלפון','סכום','ערוץ','קוד הפניה','שגריר'],
+    ...rows.map(s=>[s.ticket_no,fmtDate(s.date),s.buyer_name,s.buyer_phone,s.amount,s.channel==='phone'?'טלפון':'אתר',s.ref,ambByCode(s.ref)?.name||''])]);
+}
+
+async function reload(){
+  try{ DATA = await Store.load(); }catch(e){ if(e.message!=='נדרשת התחברות') toast(e.message||'שגיאה בטעינת נתונים','fa-triangle-exclamation'); return; }
+  renderAll();
+}
+
+/* ================= LOGIN ================= */
+function showLogin(){ $('#loginErr').textContent=''; $('#loginModal').classList.add('open'); setTimeout(()=>$('#lPass').focus(),50); }
+async function doLogin(){
+  const btn=$('#lBtn'); btn.disabled=true; $('#loginErr').textContent='';
+  try{ await Store._post('/login',{password:$('#lPass').value}); $('#lPass').value=''; $('#loginModal').classList.remove('open'); await reload(); }
+  catch(e){ $('#loginErr').textContent=e.message; }
+  btn.disabled=false;
+}
+async function logout(){ try{ await Store._post('/logout',{}); }catch(e){} DATA={ambassadors:[],sales:[]}; renderAll(); showLogin(); }
+
+/* ================= INIT ================= */
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.view));
+document.querySelectorAll('#view-ambassadors th[data-sort]').forEach(th=>th.onclick=()=>{
+  const k = th.dataset.sort; ambSort = {key:k, dir: ambSort.key===k ? -ambSort.dir : (['name','phone','code'].includes(k)?1:-1)}; renderAmb();
+});
+['#ambSearch','#ambFilter'].forEach(s=>$(s).addEventListener('input',renderAmb));
+['#saleSearch','#saleAmb','#saleChannel'].forEach(s=>$(s).addEventListener('input',renderSales));
+document.querySelectorAll('.overlay:not(#loginModal)').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.overlay.open:not(#loginModal)').forEach(o=>o.classList.remove('open')); });
+
+$('#orgName').textContent = CONFIG.ORG_NAME;
+$('#orgSub').textContent = `כרטיס: ${CONFIG.TICKET_PRICE} ₪ · מעקב שגרירים וקישורים אישיים`;
+if(Store.live()){ const b=$('#modeBadge'); b.classList.add('live'); b.innerHTML='<i class="fa-solid fa-signal"></i> מחובר'; $('#logoutBtn').style.display=''; }
+$('#lPass').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+reload();
+</script>
+</body>
+</html>
