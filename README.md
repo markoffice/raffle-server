@@ -8,12 +8,12 @@ npm install
 copy .env.example .env      (ולמלא ערכים)
 set ADMIN_PASSWORD=... && set SESSION_SECRET=... && set INGEST_KEY=... && npm start
 ```
-אחר כך פותחים את http://localhost:3000
+הדשבורד: http://localhost:3000/admin · דף הנחיתה: http://localhost:3000
 
 ## העלאה ל-CapRover
 1. יוצרים אפליקציה חדשה, למשל `raffle`.
 2. מפעילים **Persistent Data**, עם Path in App: `/app/data`. בלי זה, מסד הנתונים יימחק בכל עדכון.
-3. ב-App Configs מגדירים משתני סביבה: `ADMIN_PASSWORD`, `SESSION_SECRET`, `INGEST_KEY`, ובמידת הצורך גם `TICKET_PRICE` ו-`FIRST_TICKET_NO`.
+3. ב-App Configs מגדירים משתני סביבה: `ADMIN_PASSWORD`, `SESSION_SECRET`, `INGEST_KEY`, ובמידת הצורך גם `TICKET_PRICE`, `FIRST_TICKET_NO` ו-`LANDING_URL` (כתובת הבסיס של הקישורים האישיים. אם לא מוגדר, נלקחת כתובת השרת).
 4. HTTP Port של הקונטיינר: `3000`.
 5. מפעילים HTTPS ומעלים: `caprover deploy`, או גוררים את קובץ ה-tar ב-Deployment.
 

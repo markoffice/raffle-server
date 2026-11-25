@@ -108,6 +108,9 @@ app.post('/api/ambassadors/delete', requireAdmin, (req, res) => {
 app.get('/api/sales', requireAdmin, (req, res) => res.json(store.listSales()));
 
 /* ---------- ציבורי: לדף הנחיתה ולקו הטלפוני ---------- */
+// כתובת בסיס לקישורים האישיים. ריק = הכתובת של השרת עצמו
+app.get('/api/public/config', (req, res) => res.json({ landing_url: process.env.LANDING_URL || '' }));
+
 // בדיקת קוד שגריר (דף נחיתה / IVR). מחזיר שם פרטי בלבד.
 app.get('/api/public/ref/:code', (req, res) => {
   const a = store.ambassadorByCode(req.params.code);
@@ -148,7 +151,7 @@ app.post('/api/sales/ingest', (req, res) => {
 
 /* ---------- סטטי ---------- */
 app.get('/health', (req, res) => res.json({ ok: true }));
-app.use(express.static(path.join(__dirname, 'public'), { index: 'index.html', maxAge: '5m' }));
+app.use(express.static(path.join(__dirname, 'public'), { index: 'index.html', maxAge: 0 }));
 app.use((req, res) => bad(res, 'לא נמצא', 404));
 app.use((err, req, res, next) => { console.error(err); bad(res, 'שגיאת שרת', 500); });
 
