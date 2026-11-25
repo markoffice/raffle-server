@@ -334,7 +334,7 @@ const Store = {
   },
   async saveAmbassador(a){
     if(this.live()) return this._post('/ambassadors/save', a);
-    const db = this._db(); const i = db.ambassadors.findIndex(x=>x.id===a.id);
+    const db = this._db(); if(!a.id) a.id = uid(); const i = db.ambassadors.findIndex(x=>x.id===a.id);
     if(i>=0) db.ambassadors[i] = a; else db.ambassadors.push(a);
     this._saveLocal(db); return a;
   },
@@ -528,7 +528,7 @@ async function saveAmb(){
   if(prev && prev.code!==code && DATA.sales.some(s=>s.ref===prev.code)){
     if(!confirmInline('לשגריר יש מכירות על הקוד הקודם. שינוי הקוד ינתק אותן ממנו. להמשיך?')) return;
   }
-  const a = { id: id || uid(), name, phone, code, target: Math.max(0, parseInt($('#fTarget').value)||0), active: $('#fActive').checked, created: prev?.created || new Date().toISOString() };
+  const a = { id: id || '', name, phone, code, target: Math.max(0, parseInt($('#fTarget').value)||0), active: $('#fActive').checked, created: prev?.created || new Date().toISOString() };
   try{ await Store.saveAmbassador(a); await reload(); closeModal('ambModal'); toast(id?'השגריר עודכן':'השגריר נוסף'); }
   catch(e){ toast(e.message||'שגיאה בשמירה','fa-triangle-exclamation'); }
 }
